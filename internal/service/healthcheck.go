@@ -1,22 +1,32 @@
 package service
 
-//go:generate mockery --name=HealthCheck --filename healthcheck.go --outpkg healthcheck_svc_mocks
+import (
+	"context"
+	"fmt"
+
+	"github.com/redis/go-redis/v9"
+)
+
+// HealthCheck checks the health of the service dependencies.
+//
+//go:generate mockery --name=HealthCheck --filename healthcheck.go --outpkg svc_mocks
 type HealthCheck interface {
-	Check() (string, string)
+	Check(ctx context.Context) error
 }
 
 type healthCheck struct {
-	serviceName string
-	instanceID  string
+	rdb *redis.Client
 }
 
-func NewHealthCheck(serviceName, instanceID string) HealthCheck {
-	return &healthCheck{
-		serviceName: serviceName,
-		instanceID:  instanceID,
+// NewHealthCheck creates a HealthCheck backed by the given Redis client.
+func NewHealthCheck(rdb *redis.Client) HealthCheck {
+	return &healthCheck{rdb: rdb}
+}
+
+// Check pings Redis and returns an error if it is unreachable.
+func (h *healthCheck) Check(ctx context.Context) error {
+	if err := h.rdb.Ping(ctx).Err(); err != nil {
+		return fmt.Errorf("redis ping: %w", err)
 	}
-}
-
-func (h *healthCheck) Check() (string, string) {
-	return h.serviceName, h.instanceID
+	return nil
 }

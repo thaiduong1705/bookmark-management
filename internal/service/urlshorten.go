@@ -4,10 +4,13 @@ import (
 	"context"
 	"crypto/rand"
 	"math/big"
+	"shorten-url/internal/domain"
 	"shorten-url/internal/repository"
 )
 
-//go:generate mockery --name=UrlShortenService --filename urlshorten.go --outpkg urlshortenservice_svc_mocks
+// UrlShortenService contains the URL shortening business logic.
+//
+//go:generate mockery --name=UrlShortenService --filename urlshorten.go --outpkg svc_mocks
 type UrlShortenService interface {
 	GetUrl(ctx context.Context, code string) (string, error)
 	CreateUrl(ctx context.Context, url string, expr int) (string, error)
@@ -17,18 +20,21 @@ type urlShortenService struct {
 	repo repository.UrlShortenRepository
 }
 
+// NewUrlShortenService creates a UrlShortenService.
 func NewUrlShortenService(repo repository.UrlShortenRepository) UrlShortenService {
 	return &urlShortenService{
 		repo: repo,
 	}
 }
 
+// GetUrl returns the original URL for the given code.
 func (svc *urlShortenService) GetUrl(ctx context.Context, code string) (string, error) {
 	return svc.repo.GetUrl(ctx, code)
 }
 
+// CreateUrl generates a random code and stores the URL under it.
 func (svc *urlShortenService) CreateUrl(ctx context.Context, url string, expr int) (string, error) {
-	code, err := generateRandomString(10)
+	code, err := generateRandomString(domain.RandomLength)
 	if err != nil {
 		return "", err
 	}
@@ -39,6 +45,7 @@ func (svc *urlShortenService) CreateUrl(ctx context.Context, url string, expr in
 	return code, nil
 }
 
+// generateRandomString returns a cryptographically random alphanumeric string.
 func generateRandomString(length int) (string, error) {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 

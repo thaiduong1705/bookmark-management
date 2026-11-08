@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	healthcheck_svc_mocks "shorten-url/internal/service/mocks"
@@ -8,42 +9,27 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestHealthCheck_Check(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		name           string
-		serviceName    string
-		instanceID     string
-		setupMockSvc   func(t *testing.T, serviceName, instanceID string) *healthcheck_svc_mocks.HealthCheck
+		svcErr         error
 		expectedStatus int
 		expectedBody   string
 	}{
 		{
-			name:        "OK",
-			serviceName: "service_test",
-			instanceID:  "instance_test",
-			setupMockSvc: func(t *testing.T, serviceName, instanceID string) *healthcheck_svc_mocks.HealthCheck {
-				mockSvc := healthcheck_svc_mocks.NewHealthCheck(t)
-				mockSvc.On("Check").Return(serviceName, instanceID)
-				return mockSvc
-			},
+			name:           "OK",
 			expectedStatus: http.StatusOK,
-			expectedBody:   `{"instance_id":"instance_test","message":"ok","service_name":"service_test"}`,
+			expectedBody:   `{"message":"ok","redis":"ok"}`,
 		},
-
 		{
-			name:        "OK2",
-			serviceName: "svc_2_test",
-			instanceID:  "ins_2_test",
-			setupMockSvc: func(t *testing.T, serviceName, instanceID string) *healthcheck_svc_mocks.HealthCheck {
-				mockSvc := healthcheck_svc_mocks.NewHealthCheck(t)
-				mockSvc.On("Check").Return(serviceName, instanceID)
-				return mockSvc
-			},
-			expectedStatus: http.StatusOK,
-			expectedBody:   `{"instance_id":"ins_2_test","message":"ok","service_name":"svc_2_test"}`,
+			name:           "redis down",
+			svcErr:         errors.New("redis down"),
+			expectedStatus: http.StatusInternalServerError,
+			expectedBody:   `{"message":"unhealthy","redis":"down"}`,
 		},
 	}
 
@@ -52,10 +38,11 @@ func TestHealthCheck_Check(t *testing.T) {
 			t.Parallel()
 			rec := httptest.NewRecorder()
 			ginCtx, _ := gin.CreateTestContext(rec)
+			ginCtx.Request = httptest.NewRequest("GET", "/health-check", nil)
 
-			mockSvc := tc.setupMockSvc(t, tc.serviceName, tc.instanceID)
-			testHandler := NewHealthCheck(mockSvc)
-			testHandler.Check(ginCtx)
+			mockSvc := healthcheck_svc_mocks.NewHealthCheck(t)
+			mockSvc.On("Check", mock.Anything).Return(tc.svcErr)
+			NewHealthCheck(mockSvc).Check(ginCtx)
 
 			assert.Equal(t, tc.expectedStatus, rec.Code)
 			assert.JSONEq(t, tc.expectedBody, rec.Body.String())

@@ -1,10 +1,12 @@
 package repository
 
 import (
-	"context"
+	"shorten-url/internal/domain"
 	redisPkg "shorten-url/pkg/redis"
 	"testing"
+	"time"
 
+	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,30 +19,58 @@ func TestUrlShortenRepository_CreateUrl(t *testing.T) {
 		code        string
 		url         string
 		expr        int
+		setupMock   func(t *testing.T) *redis.Client
 		expectedErr error
 	}{
 		{
-			name:        "success",
-			code:        "abc",
-			url:         "http://example.com",
-			expr:        1,
+			name: "success",
+			code: "abc",
+			url:  "http://example.com",
+			expr: 2,
+			setupMock: func(t *testing.T) *redis.Client {
+				return redisPkg.InitMockRedis(t)
+			},
 			expectedErr: nil,
+		},
+		{
+			name: "redis down",
+			code: "abc",
+			url:  "http://example.com",
+			expr: 2,
+			setupMock: func(t *testing.T) *redis.Client {
+				rdb := redisPkg.InitMockRedis(t)
+				rdb.Close()
+				return rdb
+			},
+			expectedErr: redis.ErrClosed,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			mockRedis := redisPkg.InitMockRedis(t)
-			defer mockRedis.Close()
+			rdb := tc.setupMock(t)
+			defer rdb.Close()
 
 			ctx := t.Context()
-			testRepo := NewUrlShortenRepository(mockRedis)
+			testRepo := NewUrlShortenRepository(rdb)
+
 			err := testRepo.CreateUrl(ctx, tc.code, tc.url, tc.expr)
-			assert.ErrorIs(t, err, tc.expectedErr)
-			res, err := mockRedis.Get(ctx, tc.code).Result()
+			if tc.expectedErr != nil {
+				assert.ErrorIs(t, err, tc.expectedErr)
+				return
+			}
+			assert.NoError(t, err)
+
+			res, err := rdb.Get(ctx, tc.code).Result()
 			assert.NoError(t, err)
 			assert.Equal(t, tc.url, res)
+
+			// expr (phút) được áp dụng làm TTL
+			ttl, err := rdb.TTL(ctx, tc.code).Result()
+			assert.NoError(t, err)
+			assert.Greater(t, ttl, time.Duration(0))
+			assert.LessOrEqual(t, ttl, time.Duration(tc.expr)*time.Minute)
 		})
 	}
 }
@@ -50,19 +80,17 @@ func TestUrlShortenRepository_GetUrl(t *testing.T) {
 	testCases := []struct {
 		name        string
 		code        string
-		url         string
-		expr        int
-		setup       func(ctx context.Context, m *redis.Client)
+		setupMock   func(t *testing.T) *redis.Client
 		expectedErr error
 		expectedRes string
 	}{
 		{
 			name: "success",
 			code: "abc",
-			url:  "http://example.com",
-			expr: 0,
-			setup: func(ctx context.Context, m *redis.Client) {
-				m.Set(ctx, "abc", "http://example.com", 0)
+			setupMock: func(t *testing.T) *redis.Client {
+				rdb := redisPkg.InitMockRedis(t)
+				rdb.Set(t.Context(), "abc", "http://example.com", 0)
+				return rdb
 			},
 			expectedErr: nil,
 			expectedRes: "http://example.com",
@@ -70,12 +98,36 @@ func TestUrlShortenRepository_GetUrl(t *testing.T) {
 		{
 			name: "key not found",
 			code: "empty",
-			url:  "empty value",
-			expr: 0,
-			setup: func(ctx context.Context, m *redis.Client) {
-				m.Set(ctx, "abc", "http://example.com", 0)
+			setupMock: func(t *testing.T) *redis.Client {
+				rdb := redisPkg.InitMockRedis(t)
+				rdb.Set(t.Context(), "abc", "http://example.com", 0)
+				return rdb
 			},
-			expectedErr: redis.Nil,
+			expectedErr: domain.ErrNotFound,
+			expectedRes: "",
+		},
+		{
+			name: "key expired",
+			code: "abc",
+			setupMock: func(t *testing.T) *redis.Client {
+				mr := miniredis.RunT(t)
+				rdb := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+				rdb.Set(t.Context(), "abc", "http://example.com", time.Minute)
+				mr.FastForward(2 * time.Minute)
+				return rdb
+			},
+			expectedErr: domain.ErrNotFound,
+			expectedRes: "",
+		},
+		{
+			name: "redis down",
+			code: "abc",
+			setupMock: func(t *testing.T) *redis.Client {
+				rdb := redisPkg.InitMockRedis(t)
+				rdb.Close()
+				return rdb
+			},
+			expectedErr: redis.ErrClosed,
 			expectedRes: "",
 		},
 	}
@@ -83,14 +135,13 @@ func TestUrlShortenRepository_GetUrl(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			mockRedis := redisPkg.InitMockRedis(t)
-			defer mockRedis.Close()
+			rdb := tc.setupMock(t)
+			defer rdb.Close()
 			ctx := t.Context()
 
-			tc.setup(ctx, mockRedis)
-			testRepo := NewUrlShortenRepository(mockRedis)
+			testRepo := NewUrlShortenRepository(rdb)
 			res, err := testRepo.GetUrl(ctx, tc.code)
-			assert.Equal(t, tc.expectedErr, err)
+			assert.ErrorIs(t, err, tc.expectedErr)
 			assert.Equal(t, tc.expectedRes, res)
 		})
 	}

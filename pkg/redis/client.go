@@ -8,6 +8,7 @@ type rdsClient struct {
 
 var rds rdsClient
 
+// NewClient creates a Redis client configured from environment variables with the given prefix.
 func NewClient(envPrefix string) (*redis.Client, error) {
 
 	cfg, err := newConfig(envPrefix)
@@ -26,6 +27,7 @@ func NewClient(envPrefix string) (*redis.Client, error) {
 	return client, nil
 }
 
+// Close closes the client created by NewClient.
 func Close() {
 	rds.client.Close()
 }

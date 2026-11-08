@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"shorten-url/internal/config"
 	"shorten-url/internal/handler"
 	"shorten-url/internal/repository"
 	"shorten-url/internal/service"
@@ -11,6 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+// Engine is the HTTP server of the application.
 type Engine interface {
 	Start() error
 	ServeHTTP(http.ResponseWriter, *http.Request)
@@ -18,11 +18,12 @@ type Engine interface {
 
 type engine struct {
 	app *gin.Engine
-	cfg *config.Config
+	cfg *Config
 	rdb *redis.Client
 }
 
-func NewEngine(cfg *config.Config, rdb *redis.Client) Engine {
+// NewEngine builds the Engine and registers all routes.
+func NewEngine(cfg *Config, rdb *redis.Client) Engine {
 	e := &engine{
 		app: gin.Default(),
 		cfg: cfg,
@@ -43,7 +44,7 @@ func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *engine) initRoutes() {
-	healthService := service.NewHealthCheck(e.cfg.ServiceName, e.cfg.InstanceID)
+	healthService := service.NewHealthCheck(e.rdb)
 	healthHandler := handler.NewHealthCheck(healthService)
 
 	urlShortenRepo := repository.NewUrlShortenRepository(e.rdb)

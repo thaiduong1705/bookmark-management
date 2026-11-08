@@ -3,25 +3,25 @@ package service
 import (
 	"testing"
 
+	redisPkg "shorten-url/pkg/redis"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestHealthCheck_Check(t *testing.T) {
 	t.Parallel()
-	testCases := []struct {
-		name        string
-		serviceName string
-		instanceID  string
-	}{
-		{"normal case", "normally", "normally"},
-	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			gotName, gotInstanceID := NewHealthCheck(tc.serviceName, tc.instanceID).Check()
-			assert.Equal(t, tc.serviceName, gotName)
-			assert.Equal(t, tc.instanceID, gotInstanceID)
-		})
-	}
+	t.Run("redis up", func(t *testing.T) {
+		t.Parallel()
+		rdb := redisPkg.InitMockRedis(t)
+		defer rdb.Close()
+		assert.NoError(t, NewHealthCheck(rdb).Check(t.Context()))
+	})
+
+	t.Run("redis down", func(t *testing.T) {
+		t.Parallel()
+		rdb := redisPkg.InitMockRedis(t)
+		rdb.Close()
+		assert.Error(t, NewHealthCheck(rdb).Check(t.Context()))
+	})
 }

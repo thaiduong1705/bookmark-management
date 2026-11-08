@@ -2,12 +2,15 @@ package main
 
 import (
 	"shorten-url/internal/api"
-	"shorten-url/internal/config"
 	"shorten-url/pkg/redis"
 )
 
+// @title Bookmark Management API
+// @version         1.0
+// @description     API for managing bookmarks
+// @BasePath /
 func main() {
-	cfg, err := config.NewConfig()
+	cfg, err := api.NewConfig()
 	if err != nil {
 		panic(err)
 	}
