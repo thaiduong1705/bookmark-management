@@ -7,6 +7,7 @@ import (
 	"shorten-url/internal/repository"
 )
 
+//go:generate mockery --name=UrlShortenService --filename urlshorten.go --outpkg urlshortenservice_svc_mocks
 type UrlShortenService interface {
 	GetUrl(ctx context.Context, code string) (string, error)
 	CreateUrl(ctx context.Context, url string, expr int) (string, error)
@@ -27,7 +28,7 @@ func (svc *urlShortenService) GetUrl(ctx context.Context, code string) (string, 
 }
 
 func (svc *urlShortenService) CreateUrl(ctx context.Context, url string, expr int) (string, error) {
-	code, err := GenerateRandomString(10)
+	code, err := generateRandomString(10)
 	if err != nil {
 		return "", err
 	}
@@ -38,7 +39,7 @@ func (svc *urlShortenService) CreateUrl(ctx context.Context, url string, expr in
 	return code, nil
 }
 
-func GenerateRandomString(length int) (string, error) {
+func generateRandomString(length int) (string, error) {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 	result := make([]byte, length)
