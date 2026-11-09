@@ -1,10 +1,10 @@
 package integration_tests
 
 import (
+	"bookmark-management/internal/api"
+	redisPkg "bookmark-management/pkg/redis"
 	"net/http"
 	"net/http/httptest"
-	"shorten-url/internal/api"
-	redisPkg "shorten-url/pkg/redis"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

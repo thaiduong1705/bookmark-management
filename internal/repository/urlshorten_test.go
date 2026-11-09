@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"shorten-url/internal/domain"
-	redisPkg "shorten-url/pkg/redis"
+	"bookmark-management/internal/domain"
+	redisPkg "bookmark-management/pkg/redis"
 	"testing"
 	"time"
 

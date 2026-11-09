@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"bookmark-management/internal/service"
 	"net/http"
-	"shorten-url/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,11 +25,11 @@ func NewHealthCheck(srv service.HealthCheck) HealthCheck {
 
 // Check
 // @Summary      Health check
-// @Description  Checks that the service and its dependencies (Redis) are healthy.
+// @Description  Checks that the service and its dependencies are healthy.
 // @Tags         health
 // @Produce      application/json
 // @Success      200  {object}  map[string]string  "Service is healthy"
-// @Failure      500  {object}  map[string]string  "Redis is unreachable"
+// @Failure      500  {object}  map[string]string  "Service is unhealthy"
 // @Router       /health-check [get]
 func (h *healthCheck) Check(c *gin.Context) {
 	if err := h.srv.Check(c.Request.Context()); err != nil {

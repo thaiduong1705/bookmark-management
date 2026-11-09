@@ -107,9 +107,6 @@ const docTemplate = `{
             },
             "post": {
                 "description": "Generates a short code for the given URL. expr is the lifetime in minutes (0 = never expires).",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],

@@ -1,13 +1,17 @@
 package api
 
 import (
+	"bookmark-management/internal/handler"
+	"bookmark-management/internal/repository"
+	"bookmark-management/internal/service"
 	"net/http"
-	"shorten-url/internal/handler"
-	"shorten-url/internal/repository"
-	"shorten-url/internal/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "bookmark-management/docs"
 )
 
 // Engine is the HTTP server of the application.
@@ -51,6 +55,7 @@ func (e *engine) initRoutes() {
 	urlShortenService := service.NewUrlShortenService(urlShortenRepo)
 	urlShortenHandler := handler.NewUrlShortenHandler(urlShortenService)
 
+	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	e.app.GET("/health-check", healthHandler.Check)
 	e.app.GET("/v1/links/shorten", urlShortenHandler.GetUrl)
 	e.app.POST("/v1/links/shorten", urlShortenHandler.CreateUrl)

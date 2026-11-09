@@ -3,7 +3,7 @@ package service
 import (
 	"testing"
 
-	redisPkg "shorten-url/pkg/redis"
+	redisPkg "bookmark-management/pkg/redis"
 
 	"github.com/stretchr/testify/assert"
 )

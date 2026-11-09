@@ -7,9 +7,9 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// HealthCheck checks the health of the service dependencies.
-//
 //go:generate mockery --name=HealthCheck --filename healthcheck.go --outpkg svc_mocks
+
+// HealthCheck checks the health of the service dependencies.
 type HealthCheck interface {
 	Check(ctx context.Context) error
 }

@@ -1,10 +1,10 @@
 package handler
 
 import (
+	"bookmark-management/internal/domain"
+	"bookmark-management/internal/service"
 	"errors"
 	"net/http"
-	"shorten-url/internal/domain"
-	"shorten-url/internal/service"
 
 	"github.com/gin-gonic/gin"
 )

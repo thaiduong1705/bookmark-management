@@ -1,16 +1,16 @@
 package service
 
 import (
+	"bookmark-management/internal/domain"
+	"bookmark-management/internal/repository"
 	"context"
 	"crypto/rand"
 	"math/big"
-	"shorten-url/internal/domain"
-	"shorten-url/internal/repository"
 )
 
-// UrlShortenService contains the URL shortening business logic.
-//
 //go:generate mockery --name=UrlShortenService --filename urlshorten.go --outpkg svc_mocks
+
+// UrlShortenService contains the URL shortening business logic.
 type UrlShortenService interface {
 	GetUrl(ctx context.Context, code string) (string, error)
 	CreateUrl(ctx context.Context, url string, expr int) (string, error)

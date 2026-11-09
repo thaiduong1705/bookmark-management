@@ -1,9 +1,9 @@
 package service
 
 import (
+	"bookmark-management/internal/domain"
+	repo_mocks "bookmark-management/internal/repository/mocks"
 	"errors"
-	"shorten-url/internal/domain"
-	repo_mocks "shorten-url/internal/repository/mocks"
 	"testing"
 
 	"github.com/redis/go-redis/v9"

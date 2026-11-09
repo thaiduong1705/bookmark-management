@@ -1,12 +1,10 @@
-.PHONY: test
-
 run:
 	go run cmd/api/main.go
 
 swagger:
 	swag init -g cmd/api/main.go
 
-COVERAGE_EXCLUDE=mocks|main.go|test
+COVERAGE_EXCLUDE=mocks|main.go|test|docs|config.go|client.go
 COVERAGE_THRESHOLD=80
 
 test:

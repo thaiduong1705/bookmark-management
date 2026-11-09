@@ -1,9 +1,9 @@
 package repository
 
 import (
+	"bookmark-management/internal/domain"
 	"context"
 	"errors"
-	"shorten-url/internal/domain"
 	"time"
 
 	"github.com/redis/go-redis/v9"

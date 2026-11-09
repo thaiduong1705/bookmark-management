@@ -1,14 +1,14 @@
 package handler
 
 import (
+	"bookmark-management/internal/domain"
+	svc_mocks "bookmark-management/internal/service/mocks"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"shorten-url/internal/domain"
-	svc_mocks "shorten-url/internal/service/mocks"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -110,14 +110,14 @@ func TestUrlShortenHandler_GetUrl(t *testing.T) {
 	}{
 		{
 			name: "success",
-			code: "test",
+			code: "tests",
 			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
-				mockSvc.On("GetUrl", mock.Anything, "test").Return("http://test.com", nil)
+				mockSvc.On("GetUrl", mock.Anything, "tests").Return("http://test.com", nil)
 				return mockSvc
 			},
 			expectedCode: http.StatusOK,
-			expectedResp: `{"url":"http://test.com"}`,
+			expectedResp: `{"url":"http://tests.com"}`,
 		},
 		{
 			name: "invalid code",
@@ -141,10 +141,10 @@ func TestUrlShortenHandler_GetUrl(t *testing.T) {
 		},
 		{
 			name: "service error",
-			code: "test",
+			code: "tests",
 			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
-				mockSvc.On("GetUrl", mock.Anything, "test").Return("", svcError)
+				mockSvc.On("GetUrl", mock.Anything, "tests").Return("", svcError)
 				return mockSvc
 			},
 			expectedCode: http.StatusInternalServerError,

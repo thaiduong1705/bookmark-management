@@ -1,8 +1,8 @@
 package main
 
 import (
-	"shorten-url/internal/api"
-	"shorten-url/pkg/redis"
+	"bookmark-management/internal/api"
+	"bookmark-management/pkg/redis"
 )
 
 // @title Bookmark Management API
@@ -19,7 +19,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer redisClient.Close()
 
 	app := api.NewEngine(cfg, redisClient)
 	if err := app.Start(); err != nil {

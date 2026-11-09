@@ -1,10 +1,10 @@
 package handler
 
 import (
+	healthcheck_svc_mocks "bookmark-management/internal/service/mocks"
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	healthcheck_svc_mocks "shorten-url/internal/service/mocks"
 	"testing"
 
 	"github.com/gin-gonic/gin"
