@@ -11,7 +11,7 @@ import (
 
 // UrlShortenHandler serves the URL shortening endpoints.
 type UrlShortenHandler interface {
-	GetUrl(c *gin.Context)
+	RedirectUrl(c *gin.Context)
 	CreateUrl(c *gin.Context)
 }
 
@@ -32,25 +32,26 @@ type UrlShortenRequest struct {
 	Expr int    `json:"expr" binding:"gte=0"`
 }
 
-// UrlShortenQuery is the query of a get-URL request.
+// UrlShortenQuery is the path parameter of a redirect request.
 type UrlShortenQuery struct {
-	Code string `form:"code" binding:"required"`
+	Code string `uri:"code" binding:"required"`
 }
 
-// GetUrl
-// @Summary      Get original URL
-// @Description  Returns the original URL stored under the given short code.
+// RedirectUrl
+// @Summary      Redirect to original URL
+// @Description  Looks up the short code and redirects (301) to the original URL via the Location header.
 // @Tags         links
 // @Produce      application/json
-// @Param        code  query     string             true  "Short code"
-// @Success      200   {object}  map[string]string  "Original URL"
+// @Param        code  path      string             true  "Short code"
+// @Success      301   {string}  string             "Redirect to original URL (see Location header)"
+// @Header       301   {string}  Location           "Original URL"
 // @Failure      400   {object}  map[string]string  "Invalid query"
 // @Failure      404   {object}  map[string]string  "URL not found"
 // @Failure      500   {object}  map[string]string  "Internal server error"
-// @Router       /v1/links/shorten [get]
-func (h *urlShortenHandler) GetUrl(c *gin.Context) {
+// @Router       /v1/links/shorten/{code} [get]
+func (h *urlShortenHandler) RedirectUrl(c *gin.Context) {
 	var query UrlShortenQuery
-	if err := c.ShouldBindQuery(&query); err != nil {
+	if err := c.ShouldBindUri(&query); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid query"})
 		return
 	}
@@ -64,7 +65,7 @@ func (h *urlShortenHandler) GetUrl(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"url": url})
+	c.Redirect(http.StatusMovedPermanently, url)
 }
 
 // CreateUrl

@@ -99,31 +99,32 @@ func TestUrlShortenHandler_CreateUrl(t *testing.T) {
 	}
 }
 
-func TestUrlShortenHandler_GetUrl(t *testing.T) {
+func TestUrlShortenHandler_RedirectUrl(t *testing.T) {
 	t.Parallel()
 	testcases := []struct {
 		name         string
 		code         string
 		setupMock    func(t *testing.T) *svc_mocks.UrlShortenService
 		expectedCode int
+		expectedLoc  string
 		expectedResp string
 	}{
 		{
 			name: "success",
-			code: "tests",
+			code: "test",
 			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
-				mockSvc.On("GetUrl", mock.Anything, "tests").Return("http://test.com", nil)
+				mockSvc.On("GetUrl", mock.Anything, "test").Return("http://test.com", nil)
 				return mockSvc
 			},
-			expectedCode: http.StatusOK,
-			expectedResp: `{"url":"http://tests.com"}`,
+			expectedCode: http.StatusMovedPermanently,
+			expectedLoc:  "http://test.com",
 		},
 		{
 			name: "invalid code",
 			code: "",
 			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
-				return svc_mocks.NewUrlShortenService(t) // service không được gọi
+				return svc_mocks.NewUrlShortenService(t)
 			},
 			expectedCode: http.StatusBadRequest,
 			expectedResp: `{"error": "invalid query"}`,
@@ -141,10 +142,10 @@ func TestUrlShortenHandler_GetUrl(t *testing.T) {
 		},
 		{
 			name: "service error",
-			code: "tests",
+			code: "test",
 			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
-				mockSvc.On("GetUrl", mock.Anything, "tests").Return("", svcError)
+				mockSvc.On("GetUrl", mock.Anything, "test").Return("", svcError)
 				return mockSvc
 			},
 			expectedCode: http.StatusInternalServerError,
@@ -157,13 +158,17 @@ func TestUrlShortenHandler_GetUrl(t *testing.T) {
 			t.Parallel()
 			rec := httptest.NewRecorder()
 			ginCtx, _ := gin.CreateTestContext(rec)
-			target := "/v1/link/shorten?code=" + url.QueryEscape(tc.code)
-			ginCtx.Request = httptest.NewRequest(http.MethodGet, target, nil)
+			ginCtx.Request = httptest.NewRequest(http.MethodGet, "/v1/links/shorten/"+url.PathEscape(tc.code), nil)
+			ginCtx.Params = gin.Params{{Key: "code", Value: tc.code}}
 			mockSvc := tc.setupMock(t)
 			handler := NewUrlShortenHandler(mockSvc)
-			handler.GetUrl(ginCtx)
+			handler.RedirectUrl(ginCtx)
+			ginCtx.Writer.WriteHeaderNow()
 			assert.Equal(t, tc.expectedCode, rec.Code)
-			assert.JSONEq(t, tc.expectedResp, rec.Body.String())
+			assert.Equal(t, tc.expectedLoc, rec.Header().Get("Location"))
+			if tc.expectedResp != "" {
+				assert.JSONEq(t, tc.expectedResp, rec.Body.String())
+			}
 		})
 	}
 }

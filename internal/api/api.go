@@ -57,6 +57,6 @@ func (e *engine) initRoutes() {
 
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	e.app.GET("/health-check", healthHandler.Check)
-	e.app.GET("/v1/links/shorten", urlShortenHandler.GetUrl)
+	e.app.GET("/v1/links/shorten/:code", urlShortenHandler.RedirectUrl)
 	e.app.POST("/v1/links/shorten", urlShortenHandler.CreateUrl)
 }

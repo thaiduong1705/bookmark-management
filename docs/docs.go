@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/health-check": {
             "get": {
-                "description": "Checks that the service and its dependencies (Redis) are healthy.",
+                "description": "Checks that the service and its dependencies are healthy.",
                 "produces": [
                     "application/json"
                 ],
@@ -36,7 +36,7 @@ const docTemplate = `{
                         }
                     },
                     "500": {
-                        "description": "Redis is unreachable",
+                        "description": "Service is unhealthy",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -48,63 +48,6 @@ const docTemplate = `{
             }
         },
         "/v1/links/shorten": {
-            "get": {
-                "description": "Returns the original URL stored under the given short code.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "links"
-                ],
-                "summary": "Get original URL",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Short code",
-                        "name": "code",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Original URL",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid query",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "URL not found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
             "post": {
                 "description": "Generates a short code for the given URL. expr is the lifetime in minutes (0 = never expires).",
                 "produces": [
@@ -137,6 +80,68 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Invalid request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/v1/links/shorten/{code}": {
+            "get": {
+                "description": "Looks up the short code and redirects (301) to the original URL via the Location header.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "links"
+                ],
+                "summary": "Redirect to original URL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Short code",
+                        "name": "code",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "301": {
+                        "description": "Redirect to original URL (see Location header)",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "headers": {
+                            "Location": {
+                                "type": "string",
+                                "description": "Original URL"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "URL not found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
