@@ -159,7 +159,7 @@ func TestUrlShortenHandler_RedirectUrl(t *testing.T) {
 			ginCtx, _ := gin.CreateTestContext(rec)
 			ginCtx.Request = httptest.NewRequest(http.MethodGet, "/v1/links/shorten/"+url.PathEscape(tc.code), nil)
 			ginCtx.Params = gin.Params{{Key: "code", Value: tc.code}}
-			mockSvc := tc.setupMock(t)
+			mockSvc := tc.setupMock(t, ginCtx)
 			handler := NewUrlShortenHandler(mockSvc)
 			handler.RedirectUrl(ginCtx)
 			ginCtx.Writer.WriteHeaderNow()
