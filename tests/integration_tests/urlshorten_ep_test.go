@@ -60,7 +60,7 @@ func TestUrlShorten_CreateUrl(t *testing.T) {
 	}
 }
 
-func TestUrlShorten_GetUrl(t *testing.T) {
+func TestUrlShorten_RedirectUrl(t *testing.T) {
 	t.Parallel()
 	testcases := []struct {
 		name         string
@@ -68,6 +68,7 @@ func TestUrlShorten_GetUrl(t *testing.T) {
 		url          string
 		setupRequest func() (*httptest.ResponseRecorder, *http.Request)
 		expectedCode int
+		expectedLoc  string
 		expectedResp string
 	}{
 		{
@@ -75,20 +76,20 @@ func TestUrlShorten_GetUrl(t *testing.T) {
 			code: "test",
 			url:  "http://test.com",
 			setupRequest: func() (*httptest.ResponseRecorder, *http.Request) {
-				target := "/v1/links/shorten?code=" + url.QueryEscape("test")
+				target := "/v1/links/shorten/" + url.PathEscape("test")
 				req := httptest.NewRequest(http.MethodGet, target, nil)
 				rec := httptest.NewRecorder()
 				return rec, req
 			},
-			expectedCode: http.StatusOK,
-			expectedResp: `{"url":"http://test.com"}`,
+			expectedCode: http.StatusMovedPermanently,
+			expectedLoc:  "http://test.com",
 		},
 		{
 			name: "code not found",
 			code: "test",
 			url:  "http://test.com",
 			setupRequest: func() (*httptest.ResponseRecorder, *http.Request) {
-				target := "/v1/links/shorten?code=" + url.QueryEscape("aaa")
+				target := "/v1/links/shorten/" + url.PathEscape("aaa")
 				req := httptest.NewRequest(http.MethodGet, target, nil)
 				rec := httptest.NewRecorder()
 				return rec, req
@@ -108,7 +109,10 @@ func TestUrlShorten_GetUrl(t *testing.T) {
 			rec, req := tc.setupRequest()
 			testApiEngine.ServeHTTP(rec, req)
 			assert.Equal(t, tc.expectedCode, rec.Code)
-			assert.JSONEq(t, tc.expectedResp, rec.Body.String())
+			assert.Equal(t, tc.expectedLoc, rec.Header().Get("Location"))
+			if tc.expectedResp != "" {
+				assert.JSONEq(t, tc.expectedResp, rec.Body.String())
+			}
 		})
 	}
 }

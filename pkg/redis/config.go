@@ -4,9 +4,9 @@ import "github.com/kelseyhightower/envconfig"
 
 // config holds the Redis connection settings.
 type config struct {
-	Address  string `default:"localhost:6379"`
-	Password string `default:""`
-	DB       int    `default:"0"`
+	Address  string `envconfig:"REDIS_ADDR" default:"localhost:6379"`
+	Password string `envconfig:"REDIS_PASSWORD" default:""`
+	DB       int    `envconfig:"REDIS_DB" default:"0"`
 }
 
 // newConfig loads config from environment variables with the given prefix.

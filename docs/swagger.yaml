@@ -18,7 +18,7 @@ info:
 paths:
   /health-check:
     get:
-      description: Checks that the service and its dependencies (Redis) are healthy.
+      description: Checks that the service and its dependencies are healthy.
       produces:
       - application/json
       responses:
@@ -29,7 +29,7 @@ paths:
               type: string
             type: object
         "500":
-          description: Redis is unreachable
+          description: Service is unhealthy
           schema:
             additionalProperties:
               type: string
@@ -38,44 +38,6 @@ paths:
       tags:
       - health
   /v1/links/shorten:
-    get:
-      description: Returns the original URL stored under the given short code.
-      parameters:
-      - description: Short code
-        in: query
-        name: code
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Original URL
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Invalid query
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: URL not found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "500":
-          description: Internal server error
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Get original URL
-      tags:
-      - links
     post:
       description: Generates a short code for the given URL. expr is the lifetime
         in minutes (0 = never expires).
@@ -108,6 +70,48 @@ paths:
               type: string
             type: object
       summary: Create short URL
+      tags:
+      - links
+  /v1/links/shorten/{code}:
+    get:
+      description: Looks up the short code and redirects (301) to the original URL
+        via the Location header.
+      parameters:
+      - description: Short code
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "301":
+          description: Redirect to original URL (see Location header)
+          headers:
+            Location:
+              description: Original URL
+              type: string
+          schema:
+            type: string
+        "400":
+          description: Invalid query
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: URL not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Redirect to original URL
       tags:
       - links
 swagger: "2.0"
