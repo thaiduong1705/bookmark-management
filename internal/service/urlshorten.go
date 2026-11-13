@@ -3,17 +3,18 @@ package service
 import (
 	"bookmark-management/internal/domain"
 	"bookmark-management/internal/repository"
-	"context"
 	"crypto/rand"
 	"math/big"
+
+	"github.com/gin-gonic/gin"
 )
 
 //go:generate mockery --name=UrlShortenService --filename urlshorten.go --outpkg svc_mocks
 
 // UrlShortenService contains the URL shortening business logic.
 type UrlShortenService interface {
-	GetUrl(ctx context.Context, code string) (string, error)
-	CreateUrl(ctx context.Context, url string, expr int) (string, error)
+	GetUrl(c *gin.Context, code string) (string, error)
+	CreateUrl(c *gin.Context, url string, expr int) (string, error)
 }
 
 type urlShortenService struct {
@@ -28,18 +29,18 @@ func NewUrlShortenService(repo repository.UrlShortenRepository) UrlShortenServic
 }
 
 // GetUrl returns the original URL for the given code.
-func (svc *urlShortenService) GetUrl(ctx context.Context, code string) (string, error) {
-	return svc.repo.GetUrl(ctx, code)
+func (svc *urlShortenService) GetUrl(c *gin.Context, code string) (string, error) {
+	return svc.repo.GetUrl(c, code)
 }
 
 // CreateUrl generates a random code and stores the URL under it.
-func (svc *urlShortenService) CreateUrl(ctx context.Context, url string, expr int) (string, error) {
+func (svc *urlShortenService) CreateUrl(c *gin.Context, url string, expr int) (string, error) {
 	code, err := generateRandomString(domain.RandomLength)
 	if err != nil {
 		return "", err
 	}
 
-	if err = svc.repo.CreateUrl(ctx, code, url, expr); err != nil {
+	if err = svc.repo.CreateUrl(c, code, url, expr); err != nil {
 		return "", err
 	}
 	return code, nil

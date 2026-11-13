@@ -4,8 +4,10 @@ import (
 	"bookmark-management/internal/domain"
 	repo_mocks "bookmark-management/internal/repository/mocks"
 	"errors"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -20,17 +22,17 @@ func TestUrlShortenService_CreateUrl(t *testing.T) {
 		name        string
 		url         string
 		expr        int
-		setupMock   func(t *testing.T) *repo_mocks.UrlShortenRepository
+		setupMock   func(t *testing.T, ctx *gin.Context) *repo_mocks.UrlShortenRepository
 		expectedErr error
 	}{
 		{
 			name: "success",
 			url:  "http://test.com",
 			expr: 1,
-			setupMock: func(t *testing.T) *repo_mocks.UrlShortenRepository {
+			setupMock: func(t *testing.T, ctx *gin.Context) *repo_mocks.UrlShortenRepository {
 				mockRepo := repo_mocks.NewUrlShortenRepository(t)
 				mockRepo.On("CreateUrl",
-					mock.Anything,
+					ctx,
 					mock.MatchedBy(func(code string) bool { return len(code) == domain.RandomLength }),
 					"http://test.com",
 					1,
@@ -43,10 +45,10 @@ func TestUrlShortenService_CreateUrl(t *testing.T) {
 			name: "repo error",
 			url:  "http://test.com",
 			expr: 1,
-			setupMock: func(t *testing.T) *repo_mocks.UrlShortenRepository {
+			setupMock: func(t *testing.T, ctx *gin.Context) *repo_mocks.UrlShortenRepository {
 				mockRepo := repo_mocks.NewUrlShortenRepository(t)
 				mockRepo.On("CreateUrl",
-					mock.Anything,
+					ctx,
 					mock.MatchedBy(func(code string) bool { return len(code) == domain.RandomLength }),
 					"http://test.com",
 					1,
@@ -60,8 +62,8 @@ func TestUrlShortenService_CreateUrl(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			ctx := t.Context()
-			mockRepo := tc.setupMock(t)
+			ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+			mockRepo := tc.setupMock(t, ctx)
 			svc := NewUrlShortenService(mockRepo)
 			code, err := svc.CreateUrl(ctx, tc.url, tc.expr)
 
@@ -72,7 +74,7 @@ func TestUrlShortenService_CreateUrl(t *testing.T) {
 			}
 			assert.ErrorIs(t, err, tc.expectedErr)
 			assert.Len(t, code, domain.RandomLength)
-			mockRepo.AssertCalled(t, "CreateUrl", mock.Anything, code, tc.url, tc.expr)
+			mockRepo.AssertCalled(t, "CreateUrl", ctx, code, tc.url, tc.expr)
 		})
 	}
 }
@@ -82,16 +84,16 @@ func TestUrlShortenService_GetUrl(t *testing.T) {
 	testcases := []struct {
 		name        string
 		code        string
-		setupMock   func(t *testing.T) *repo_mocks.UrlShortenRepository
+		setupMock   func(t *testing.T, ctx *gin.Context) *repo_mocks.UrlShortenRepository
 		expectedUrl string
 		expectedErr error
 	}{
 		{
 			name: "success",
 			code: "aaa",
-			setupMock: func(t *testing.T) *repo_mocks.UrlShortenRepository {
+			setupMock: func(t *testing.T, ctx *gin.Context) *repo_mocks.UrlShortenRepository {
 				mockRepo := repo_mocks.NewUrlShortenRepository(t)
-				mockRepo.On("GetUrl", mock.Anything, "aaa").Return("http://test.com", nil)
+				mockRepo.On("GetUrl", ctx, "aaa").Return("http://test.com", nil)
 				return mockRepo
 			},
 			expectedUrl: "http://test.com",
@@ -100,9 +102,9 @@ func TestUrlShortenService_GetUrl(t *testing.T) {
 		{
 			name: "repo error",
 			code: "aaa",
-			setupMock: func(t *testing.T) *repo_mocks.UrlShortenRepository {
+			setupMock: func(t *testing.T, ctx *gin.Context) *repo_mocks.UrlShortenRepository {
 				mockRepo := repo_mocks.NewUrlShortenRepository(t)
-				mockRepo.On("GetUrl", mock.Anything, "aaa").Return("", errRepo)
+				mockRepo.On("GetUrl", ctx, "aaa").Return("", errRepo)
 				return mockRepo
 			},
 			expectedErr: errRepo,
@@ -111,9 +113,9 @@ func TestUrlShortenService_GetUrl(t *testing.T) {
 		{
 			name: "url not found",
 			code: "aaa",
-			setupMock: func(t *testing.T) *repo_mocks.UrlShortenRepository {
+			setupMock: func(t *testing.T, ctx *gin.Context) *repo_mocks.UrlShortenRepository {
 				mockRepo := repo_mocks.NewUrlShortenRepository(t)
-				mockRepo.On("GetUrl", mock.Anything, "aaa").Return("", redis.Nil)
+				mockRepo.On("GetUrl", ctx, "aaa").Return("", redis.Nil)
 				return mockRepo
 			},
 			expectedUrl: "",
@@ -124,8 +126,8 @@ func TestUrlShortenService_GetUrl(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			ctx := t.Context()
-			mockRepo := tc.setupMock(t)
+			ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+			mockRepo := tc.setupMock(t, ctx)
 			svc := NewUrlShortenService(mockRepo)
 			url, err := svc.GetUrl(ctx, tc.code)
 			if tc.expectedErr != nil {
@@ -135,7 +137,7 @@ func TestUrlShortenService_GetUrl(t *testing.T) {
 			}
 			assert.ErrorIs(t, err, tc.expectedErr)
 			assert.Equal(t, tc.expectedUrl, url)
-			mockRepo.AssertCalled(t, "GetUrl", mock.Anything, tc.code)
+			mockRepo.AssertCalled(t, "GetUrl", ctx, tc.code)
 		})
 	}
 }

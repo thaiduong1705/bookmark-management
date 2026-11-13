@@ -13,7 +13,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 var svcError = errors.New("svc error")
@@ -23,7 +22,7 @@ func TestUrlShortenHandler_CreateUrl(t *testing.T) {
 	testcases := []struct {
 		name         string
 		req          UrlShortenRequest
-		setupMock    func(t *testing.T) *svc_mocks.UrlShortenService
+		setupMock    func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService
 		expectedCode int
 		expectedResp string
 	}{
@@ -33,9 +32,9 @@ func TestUrlShortenHandler_CreateUrl(t *testing.T) {
 				Url:  "http://test.com",
 				Expr: 1,
 			},
-			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
+			setupMock: func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
-				mockSvc.On("CreateUrl", mock.Anything, "http://test.com", 1).Return("testCode", nil)
+				mockSvc.On("CreateUrl", ctx, "http://test.com", 1).Return("testCode", nil)
 				return mockSvc
 			},
 			expectedCode: http.StatusCreated,
@@ -47,7 +46,7 @@ func TestUrlShortenHandler_CreateUrl(t *testing.T) {
 				Url:  "aasda",
 				Expr: 1,
 			},
-			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
+			setupMock: func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
 				return mockSvc
 			},
@@ -60,7 +59,7 @@ func TestUrlShortenHandler_CreateUrl(t *testing.T) {
 				Url:  "http://test.com",
 				Expr: -1,
 			},
-			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
+			setupMock: func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
 				return mockSvc
 			},
@@ -73,9 +72,9 @@ func TestUrlShortenHandler_CreateUrl(t *testing.T) {
 				Url:  "http://test.com",
 				Expr: 1,
 			},
-			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
+			setupMock: func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
-				mockSvc.On("CreateUrl", mock.Anything, "http://test.com", 1).Return("", svcError)
+				mockSvc.On("CreateUrl", ctx, "http://test.com", 1).Return("", svcError)
 				return mockSvc
 			},
 			expectedCode: http.StatusInternalServerError,
@@ -90,7 +89,7 @@ func TestUrlShortenHandler_CreateUrl(t *testing.T) {
 			rec := httptest.NewRecorder()
 			ginCtx, _ := gin.CreateTestContext(rec)
 			ginCtx.Request = httptest.NewRequest(http.MethodPost, "/v1/link/shorten", bytes.NewReader(body))
-			mockSvc := tc.setupMock(t)
+			mockSvc := tc.setupMock(t, ginCtx)
 			handler := NewUrlShortenHandler(mockSvc)
 			handler.CreateUrl(ginCtx)
 			assert.Equal(t, tc.expectedCode, rec.Code)
@@ -104,25 +103,25 @@ func TestUrlShortenHandler_GetUrl(t *testing.T) {
 	testcases := []struct {
 		name         string
 		code         string
-		setupMock    func(t *testing.T) *svc_mocks.UrlShortenService
+		setupMock    func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService
 		expectedCode int
 		expectedResp string
 	}{
 		{
 			name: "success",
-			code: "tests",
-			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
+			code: "test",
+			setupMock: func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
-				mockSvc.On("GetUrl", mock.Anything, "tests").Return("http://test.com", nil)
+				mockSvc.On("GetUrl", ctx, "test").Return("http://test.com", nil)
 				return mockSvc
 			},
 			expectedCode: http.StatusOK,
-			expectedResp: `{"url":"http://tests.com"}`,
+			expectedResp: `{"url":"http://test.com"}`,
 		},
 		{
 			name: "invalid code",
 			code: "",
-			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
+			setupMock: func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService {
 				return svc_mocks.NewUrlShortenService(t) // service không được gọi
 			},
 			expectedCode: http.StatusBadRequest,
@@ -131,9 +130,9 @@ func TestUrlShortenHandler_GetUrl(t *testing.T) {
 		{
 			name: "code not found",
 			code: "aaa",
-			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
+			setupMock: func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
-				mockSvc.On("GetUrl", mock.Anything, "aaa").Return("", domain.ErrNotFound)
+				mockSvc.On("GetUrl", ctx, "aaa").Return("", domain.ErrNotFound)
 				return mockSvc
 			},
 			expectedCode: http.StatusNotFound,
@@ -141,10 +140,10 @@ func TestUrlShortenHandler_GetUrl(t *testing.T) {
 		},
 		{
 			name: "service error",
-			code: "tests",
-			setupMock: func(t *testing.T) *svc_mocks.UrlShortenService {
+			code: "test",
+			setupMock: func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
-				mockSvc.On("GetUrl", mock.Anything, "tests").Return("", svcError)
+				mockSvc.On("GetUrl", ctx, "test").Return("", svcError)
 				return mockSvc
 			},
 			expectedCode: http.StatusInternalServerError,
@@ -159,7 +158,7 @@ func TestUrlShortenHandler_GetUrl(t *testing.T) {
 			ginCtx, _ := gin.CreateTestContext(rec)
 			target := "/v1/link/shorten?code=" + url.QueryEscape(tc.code)
 			ginCtx.Request = httptest.NewRequest(http.MethodGet, target, nil)
-			mockSvc := tc.setupMock(t)
+			mockSvc := tc.setupMock(t, ginCtx)
 			handler := NewUrlShortenHandler(mockSvc)
 			handler.GetUrl(ginCtx)
 			assert.Equal(t, tc.expectedCode, rec.Code)

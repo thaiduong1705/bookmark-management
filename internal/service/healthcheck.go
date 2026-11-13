@@ -1,9 +1,9 @@
 package service
 
 import (
-	"context"
 	"fmt"
 
+	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -11,7 +11,7 @@ import (
 
 // HealthCheck checks the health of the service dependencies.
 type HealthCheck interface {
-	Check(ctx context.Context) error
+	Check(c *gin.Context) error
 }
 
 type healthCheck struct {
@@ -24,8 +24,8 @@ func NewHealthCheck(rdb *redis.Client) HealthCheck {
 }
 
 // Check pings Redis and returns an error if it is unreachable.
-func (h *healthCheck) Check(ctx context.Context) error {
-	if err := h.rdb.Ping(ctx).Err(); err != nil {
+func (h *healthCheck) Check(c *gin.Context) error {
+	if err := h.rdb.Ping(c).Err(); err != nil {
 		return fmt.Errorf("redis ping: %w", err)
 	}
 	return nil
