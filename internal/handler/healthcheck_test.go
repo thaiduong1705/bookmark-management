@@ -9,7 +9,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestHealthCheck_Check(t *testing.T) {
@@ -41,7 +40,7 @@ func TestHealthCheck_Check(t *testing.T) {
 			ginCtx.Request = httptest.NewRequest("GET", "/health-check", nil)
 
 			mockSvc := healthcheck_svc_mocks.NewHealthCheck(t)
-			mockSvc.On("Check", mock.Anything).Return(tc.svcErr)
+			mockSvc.On("Check", ginCtx).Return(tc.svcErr)
 			NewHealthCheck(mockSvc).Check(ginCtx)
 
 			assert.Equal(t, tc.expectedStatus, rec.Code)

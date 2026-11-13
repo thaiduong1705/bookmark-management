@@ -28,8 +28,11 @@ type engine struct {
 
 // NewEngine builds the Engine and registers all routes.
 func NewEngine(cfg *Config, rdb *redis.Client) Engine {
+	app := gin.Default()
+	app.ContextWithFallback = true
+
 	e := &engine{
-		app: gin.Default(),
+		app: app,
 		cfg: cfg,
 		rdb: rdb,
 	}

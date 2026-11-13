@@ -32,7 +32,7 @@ func NewHealthCheck(srv service.HealthCheck) HealthCheck {
 // @Failure      500  {object}  map[string]string  "Service is unhealthy"
 // @Router       /health-check [get]
 func (h *healthCheck) Check(c *gin.Context) {
-	if err := h.srv.Check(c.Request.Context()); err != nil {
+	if err := h.srv.Check(c); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "unhealthy",
 			"redis":   "down",

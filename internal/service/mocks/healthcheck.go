@@ -3,7 +3,7 @@
 package svc_mocks
 
 import (
-	context "context"
+	gin "github.com/gin-gonic/gin"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -13,17 +13,17 @@ type HealthCheck struct {
 	mock.Mock
 }
 
-// Check provides a mock function with given fields: ctx
-func (_m *HealthCheck) Check(ctx context.Context) error {
-	ret := _m.Called(ctx)
+// Check provides a mock function with given fields: c
+func (_m *HealthCheck) Check(c *gin.Context) error {
+	ret := _m.Called(c)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Check")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(*gin.Context) error); ok {
+		r0 = rf(c)
 	} else {
 		r0 = ret.Error(0)
 	}

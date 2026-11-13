@@ -3,10 +3,12 @@ package repository
 import (
 	"bookmark-management/internal/domain"
 	redisPkg "bookmark-management/pkg/redis"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
+	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 )
@@ -52,7 +54,7 @@ func TestUrlShortenRepository_CreateUrl(t *testing.T) {
 			rdb := tc.setupMock(t)
 			defer rdb.Close()
 
-			ctx := t.Context()
+			ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
 			testRepo := NewUrlShortenRepository(rdb)
 
 			err := testRepo.CreateUrl(ctx, tc.code, tc.url, tc.expr)
@@ -66,7 +68,6 @@ func TestUrlShortenRepository_CreateUrl(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tc.url, res)
 
-			// expr (phút) được áp dụng làm TTL
 			ttl, err := rdb.TTL(ctx, tc.code).Result()
 			assert.NoError(t, err)
 			assert.Greater(t, ttl, time.Duration(0))
@@ -137,7 +138,7 @@ func TestUrlShortenRepository_GetUrl(t *testing.T) {
 			t.Parallel()
 			rdb := tc.setupMock(t)
 			defer rdb.Close()
-			ctx := t.Context()
+			ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
 
 			testRepo := NewUrlShortenRepository(rdb)
 			res, err := testRepo.GetUrl(ctx, tc.code)

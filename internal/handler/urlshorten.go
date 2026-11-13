@@ -56,7 +56,7 @@ func (h *urlShortenHandler) RedirectUrl(c *gin.Context) {
 		return
 	}
 
-	url, err := h.svc.GetUrl(c.Request.Context(), query.Code)
+	url, err := h.svc.GetUrl(c, query.Code)
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "url not found"})
@@ -85,7 +85,7 @@ func (h *urlShortenHandler) CreateUrl(c *gin.Context) {
 		return
 	}
 
-	code, err := h.svc.CreateUrl(c.Request.Context(), req.Url, req.Expr)
+	code, err := h.svc.CreateUrl(c, req.Url, req.Expr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
