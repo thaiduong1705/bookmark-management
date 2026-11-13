@@ -1,0 +1,49 @@
+# Binaries
+/bin/
+/dist/
+/shorten-url
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test artifacts
+*.test
+*.out
+coverage.txt
+coverage.html
+*.prof
+
+# Go workspace
+go.work
+go.work.sum
+
+# Vendor (bỏ comment nếu không muốn commit vendor)
+# vendor/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local config
+config.local.*
+
+# Logs & temp
+*.log
+tmp/
+*.tmp
+
+# IDEs / editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

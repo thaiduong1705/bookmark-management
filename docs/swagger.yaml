@@ -1,0 +1,113 @@
+basePath: /
+definitions:
+  handler.UrlShortenRequest:
+    properties:
+      expr:
+        minimum: 0
+        type: integer
+      url:
+        type: string
+    required:
+    - url
+    type: object
+info:
+  contact: {}
+  description: API for managing bookmarks
+  title: Bookmark Management API
+  version: "1.0"
+paths:
+  /health-check:
+    get:
+      description: Checks that the service and its dependencies (Redis) are healthy.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service is healthy
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Redis is unreachable
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - health
+  /v1/links/shorten:
+    get:
+      description: Returns the original URL stored under the given short code.
+      parameters:
+      - description: Short code
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Original URL
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid query
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: URL not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get original URL
+      tags:
+      - links
+    post:
+      description: Generates a short code for the given URL. expr is the lifetime
+        in minutes (0 = never expires).
+      parameters:
+      - description: URL to shorten
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UrlShortenRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Generated short code
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal server error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create short URL
+      tags:
+      - links
+swagger: "2.0"
