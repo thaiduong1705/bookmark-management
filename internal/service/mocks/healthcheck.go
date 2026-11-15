@@ -3,7 +3,7 @@
 package svc_mocks
 
 import (
-	gin "github.com/gin-gonic/gin"
+	context "context"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -13,22 +13,39 @@ type HealthCheck struct {
 	mock.Mock
 }
 
-// Check provides a mock function with given fields: c
-func (_m *HealthCheck) Check(c *gin.Context) error {
-	ret := _m.Called(c)
+// Check provides a mock function with given fields: ctx
+func (_m *HealthCheck) Check(ctx context.Context) (string, string, error) {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Check")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*gin.Context) error); ok {
-		r0 = rf(c)
+	var r0 string
+	var r1 string
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context) (string, string, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) string); ok {
+		r0 = rf(ctx)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(string)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context) string); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Get(1).(string)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context) error); ok {
+		r2 = rf(ctx)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // NewHealthCheck creates a new instance of HealthCheck. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

@@ -3,7 +3,7 @@
 package repo_mocks
 
 import (
-	gin "github.com/gin-gonic/gin"
+	context "context"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -14,7 +14,7 @@ type UrlShortenRepository struct {
 }
 
 // CreateUrl provides a mock function with given fields: c, code, url, expr
-func (_m *UrlShortenRepository) CreateUrl(c *gin.Context, code string, url string, expr int) error {
+func (_m *UrlShortenRepository) CreateUrl(c context.Context, code string, url string, expr int) error {
 	ret := _m.Called(c, code, url, expr)
 
 	if len(ret) == 0 {
@@ -22,7 +22,7 @@ func (_m *UrlShortenRepository) CreateUrl(c *gin.Context, code string, url strin
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*gin.Context, string, string, int) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, int) error); ok {
 		r0 = rf(c, code, url, expr)
 	} else {
 		r0 = ret.Error(0)
@@ -32,7 +32,7 @@ func (_m *UrlShortenRepository) CreateUrl(c *gin.Context, code string, url strin
 }
 
 // GetUrl provides a mock function with given fields: c, code
-func (_m *UrlShortenRepository) GetUrl(c *gin.Context, code string) (string, error) {
+func (_m *UrlShortenRepository) GetUrl(c context.Context, code string) (string, error) {
 	ret := _m.Called(c, code)
 
 	if len(ret) == 0 {
@@ -41,16 +41,16 @@ func (_m *UrlShortenRepository) GetUrl(c *gin.Context, code string) (string, err
 
 	var r0 string
 	var r1 error
-	if rf, ok := ret.Get(0).(func(*gin.Context, string) (string, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
 		return rf(c, code)
 	}
-	if rf, ok := ret.Get(0).(func(*gin.Context, string) string); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) string); ok {
 		r0 = rf(c, code)
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
-	if rf, ok := ret.Get(1).(func(*gin.Context, string) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
 		r1 = rf(c, code)
 	} else {
 		r1 = ret.Error(1)

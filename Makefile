@@ -1,6 +1,9 @@
 run:
 	go run cmd/api/main.go
 
+build:
+	go build -o /dev/null cmd/api/main.go
+
 swagger:
 	swag init -g cmd/api/main.go
 

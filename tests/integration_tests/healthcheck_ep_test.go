@@ -21,14 +21,14 @@ func TestHealthCheck_Check(t *testing.T) {
 	}{
 		{
 			name: "OK",
-			cfg:  api.Config{},
+			cfg:  api.Config{ServiceName: "bookmark_service", InstanceId: "instance_1"},
 			setupRequest: func() (*httptest.ResponseRecorder, *http.Request) {
 				req := httptest.NewRequest("GET", "/health-check", nil)
 				rec := httptest.NewRecorder()
 				return rec, req
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `{"message":"ok","redis":"ok"}`,
+			expectedBody:   `{"message":"ok","service_name":"bookmark_service","instance_id":"instance_1"}`,
 		},
 	}
 
