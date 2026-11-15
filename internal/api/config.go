@@ -1,7 +1,7 @@
 package api
 
 import (
-	"uuid"
+	"github.com/google/uuid"
 
 	"github.com/kelseyhightower/envconfig"
 )

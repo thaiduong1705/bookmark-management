@@ -15,20 +15,24 @@ func TestHealthCheck_Check(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		name           string
+		svcName        string
+		svcInstanceId  string
 		svcErr         error
 		expectedStatus int
 		expectedBody   string
 	}{
 		{
 			name:           "OK",
+			svcName:        "bookmark_service",
+			svcInstanceId:  "instance_1",
 			expectedStatus: http.StatusOK,
-			expectedBody:   `{"message":"ok","redis":"ok"}`,
+			expectedBody:   `{"message":"ok","service_name":"bookmark_service","instance_id":"instance_1"}`,
 		},
 		{
 			name:           "redis down",
 			svcErr:         errors.New("redis down"),
 			expectedStatus: http.StatusInternalServerError,
-			expectedBody:   `{"message":"unhealthy","redis":"down"}`,
+			expectedBody:   `{"message":"unhealthy"}`,
 		},
 	}
 
@@ -40,7 +44,7 @@ func TestHealthCheck_Check(t *testing.T) {
 			ginCtx.Request = httptest.NewRequest("GET", "/health-check", nil)
 
 			mockSvc := healthcheck_svc_mocks.NewHealthCheck(t)
-			mockSvc.On("Check", ginCtx).Return(tc.svcErr)
+			mockSvc.On("Check", ginCtx).Return(tc.svcName, tc.svcInstanceId, tc.svcErr)
 			NewHealthCheck(mockSvc).Check(ginCtx)
 
 			assert.Equal(t, tc.expectedStatus, rec.Code)

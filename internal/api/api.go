@@ -4,6 +4,7 @@ import (
 	"bookmark-management/internal/handler"
 	"bookmark-management/internal/repository"
 	"bookmark-management/internal/service"
+	"bookmark-management/pkg/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -51,11 +52,13 @@ func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *engine) initRoutes() {
+	strGenUtil := utils.NewStringGenerator()
+
 	healthService := service.NewHealthCheck(e.rdb, e.cfg.ServiceName, e.cfg.InstanceId)
 	healthHandler := handler.NewHealthCheck(healthService)
 
 	urlShortenRepo := repository.NewUrlShortenRepository(e.rdb)
-	urlShortenService := service.NewUrlShortenService(urlShortenRepo)
+	urlShortenService := service.NewUrlShortenService(urlShortenRepo, strGenUtil)
 	urlShortenHandler := handler.NewUrlShortenHandler(urlShortenService)
 
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

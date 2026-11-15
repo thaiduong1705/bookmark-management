@@ -28,8 +28,8 @@ func NewUrlShortenHandler(svc service.UrlShortenService) UrlShortenHandler {
 
 // UrlShortenRequest is the body of a create-short-URL request; Expr is in minutes (0 = never expires).
 type UrlShortenRequest struct {
-	Url  string `json:"url" binding:"required,url"`
-	Expr int    `json:"expr" binding:"gte=0"`
+	Url string `json:"url" binding:"required,url"`
+	Exp int    `json:"exp" binding:"gte=0"`
 }
 
 // UrlShortenQuery is the path parameter of a redirect request.
@@ -85,12 +85,12 @@ func (h *urlShortenHandler) CreateUrl(c *gin.Context) {
 		return
 	}
 
-	code, err := h.svc.CreateUrl(c, req.Url, req.Expr)
+	code, err := h.svc.CreateUrl(c, req.Url, req.Exp)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"code": code})
+	c.JSON(http.StatusCreated, gin.H{"code": code, "message": "Shorten URL generated successfully!"})
 	return
 }
