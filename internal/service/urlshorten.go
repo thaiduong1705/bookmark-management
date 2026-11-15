@@ -3,63 +3,54 @@ package service
 import (
 	"bookmark-management/internal/domain"
 	"bookmark-management/internal/repository"
-	"crypto/rand"
-	"math/big"
-
-	"github.com/gin-gonic/gin"
+	"bookmark-management/pkg/utils"
+	"context"
+	"errors"
 )
 
 //go:generate mockery --name=UrlShortenService --filename urlshorten.go --outpkg svc_mocks
 
 // UrlShortenService contains the URL shortening business logic.
 type UrlShortenService interface {
-	GetUrl(c *gin.Context, code string) (string, error)
-	CreateUrl(c *gin.Context, url string, expr int) (string, error)
+	GetUrl(ctx context.Context, code string) (string, error)
+	CreateUrl(ctx context.Context, url string, expr int) (string, error)
 }
 
 type urlShortenService struct {
-	repo repository.UrlShortenRepository
+	repo       repository.UrlShortenRepository
+	strGenUtil utils.StringGenerator
 }
 
 // NewUrlShortenService creates a UrlShortenService.
-func NewUrlShortenService(repo repository.UrlShortenRepository) UrlShortenService {
+func NewUrlShortenService(repo repository.UrlShortenRepository, strGenUtil utils.StringGenerator) UrlShortenService {
 	return &urlShortenService{
-		repo: repo,
+		repo:       repo,
+		strGenUtil: strGenUtil,
 	}
 }
 
 // GetUrl returns the original URL for the given code.
-func (svc *urlShortenService) GetUrl(c *gin.Context, code string) (string, error) {
-	return svc.repo.GetUrl(c, code)
+func (svc *urlShortenService) GetUrl(ctx context.Context, code string) (string, error) {
+	return svc.repo.GetUrl(ctx, code)
 }
 
 // CreateUrl generates a random code and stores the URL under it.
-func (svc *urlShortenService) CreateUrl(c *gin.Context, url string, expr int) (string, error) {
-	code, err := generateRandomString(domain.RandomLength)
+func (svc *urlShortenService) CreateUrl(ctx context.Context, url string, expr int) (string, error) {
+	code, err := svc.strGenUtil.Generate(domain.RandomLength)
 	if err != nil {
 		return "", err
 	}
 
-	if err = svc.repo.CreateUrl(c, code, url, expr); err != nil {
+	// check if the code exists, recursive it
+	_, err = svc.repo.GetUrl(ctx, code)
+	if err != nil && !errors.Is(err, domain.ErrNotFound) {
+		return "", err
+	} else if err == nil {
+		return svc.CreateUrl(ctx, url, expr)
+	}
+
+	if err = svc.repo.CreateUrl(ctx, code, url, expr); err != nil {
 		return "", err
 	}
 	return code, nil
-}
-
-// generateRandomString returns a cryptographically random alphanumeric string.
-func generateRandomString(length int) (string, error) {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
-	result := make([]byte, length)
-
-	for i := range result {
-		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
-		if err != nil {
-			return "", err
-		}
-
-		result[i] = charset[num.Int64()]
-	}
-
-	return string(result), nil
 }

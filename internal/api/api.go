@@ -51,7 +51,7 @@ func (e *engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e *engine) initRoutes() {
-	healthService := service.NewHealthCheck(e.rdb)
+	healthService := service.NewHealthCheck(e.rdb, e.cfg.ServiceName, e.cfg.InstanceId)
 	healthHandler := handler.NewHealthCheck(healthService)
 
 	urlShortenRepo := repository.NewUrlShortenRepository(e.rdb)
