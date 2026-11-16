@@ -27,8 +27,8 @@ func TestUrlShorten_CreateUrl(t *testing.T) {
 			name: "success",
 			setupRequest: func() (*httptest.ResponseRecorder, *http.Request) {
 				body, _ := json.Marshal(handler.UrlShortenRequest{
-					Url:  "http://test.com",
-					Expr: 1,
+					Url: "http://test.com",
+					Exp: 1,
 				})
 				req := httptest.NewRequest(http.MethodPost, "/v1/links/shorten", bytes.NewReader(body))
 				rec := httptest.NewRecorder()
