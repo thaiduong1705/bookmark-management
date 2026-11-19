@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bookmark-management/docs"
 	"bookmark-management/internal/handler"
 	"bookmark-management/internal/repository"
 	"bookmark-management/internal/service"
@@ -61,8 +62,13 @@ func (e *engine) initRoutes() {
 	urlShortenService := service.NewUrlShortenService(urlShortenRepo, strGenUtil)
 	urlShortenHandler := handler.NewUrlShortenHandler(urlShortenService)
 
+	docs.SwaggerInfo.BasePath = e.cfg.BasePath
 	e.app.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	e.app.GET("/health-check", healthHandler.Check)
-	e.app.GET("/v1/links/shorten/:code", urlShortenHandler.RedirectUrl)
-	e.app.POST("/v1/links/shorten", urlShortenHandler.CreateUrl)
+
+	v1 := e.app.Group("/v1")
+	{
+		v1.GET("/links/shorten/:code", urlShortenHandler.RedirectUrl)
+		v1.POST("/links/shorten", urlShortenHandler.CreateUrl)
+	}
 }

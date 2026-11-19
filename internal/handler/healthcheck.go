@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bookmark-management/internal/service"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -34,6 +35,7 @@ func NewHealthCheck(srv service.HealthCheck) HealthCheck {
 func (h *healthCheck) Check(c *gin.Context) {
 	serviceName, instanceId, err := h.srv.Check(c)
 	if err != nil {
+		slog.ErrorContext(c, "health check failed", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": "unhealthy",
 		})

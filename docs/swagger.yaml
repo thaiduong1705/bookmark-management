@@ -1,8 +1,21 @@
 basePath: /
 definitions:
+  handler.FieldErrorResponse:
+    properties:
+      detail:
+        description: Detail lists the invalid fields and the validation rule each
+          one broke; omitted when unknown.
+        example: Url is invalid (url)
+        type: string
+      message:
+        description: Message is a short, general description of the failure.
+        example: Invalid request
+        type: string
+    type: object
   handler.UrlShortenRequest:
     properties:
-      expr:
+      exp:
+        maximum: 84600
         minimum: 0
         type: integer
       url:
@@ -60,9 +73,7 @@ paths:
         "400":
           description: Invalid request
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handler.FieldErrorResponse'
         "500":
           description: Internal server error
           schema:
@@ -96,9 +107,7 @@ paths:
         "400":
           description: Invalid query
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/handler.FieldErrorResponse'
         "404":
           description: URL not found
           schema:

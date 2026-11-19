@@ -74,10 +74,7 @@
                     "400": {
                         "description": "Invalid request",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handler.FieldErrorResponse"
                         }
                     },
                     "500": {
@@ -127,10 +124,7 @@
                     "400": {
                         "description": "Invalid query",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/handler.FieldErrorResponse"
                         }
                     },
                     "404": {
@@ -156,14 +150,30 @@
         }
     },
     "definitions": {
+        "handler.FieldErrorResponse": {
+            "type": "object",
+            "properties": {
+                "detail": {
+                    "description": "Detail lists the invalid fields and the validation rule each one broke; omitted when unknown.",
+                    "type": "string",
+                    "example": "Url is invalid (url)"
+                },
+                "message": {
+                    "description": "Message is a short, general description of the failure.",
+                    "type": "string",
+                    "example": "Invalid request"
+                }
+            }
+        },
         "handler.UrlShortenRequest": {
             "type": "object",
             "required": [
                 "url"
             ],
             "properties": {
-                "expr": {
+                "exp": {
                     "type": "integer",
+                    "maximum": 84600,
                     "minimum": 0
                 },
                 "url": {

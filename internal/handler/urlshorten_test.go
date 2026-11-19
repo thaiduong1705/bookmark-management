@@ -29,8 +29,8 @@ func TestUrlShortenHandler_CreateUrl(t *testing.T) {
 		{
 			name: "success",
 			req: UrlShortenRequest{
-				Url:  "http://test.com",
-				Expr: 1,
+				Url: "http://test.com",
+				Exp: 1,
 			},
 			setupMock: func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
@@ -38,39 +38,39 @@ func TestUrlShortenHandler_CreateUrl(t *testing.T) {
 				return mockSvc
 			},
 			expectedCode: http.StatusCreated,
-			expectedResp: `{"code":"testCode"}`,
+			expectedResp: `{"code":"testCode", "message":"Shorten URL generated successfully!"}`,
 		},
 		{
 			name: "invalid url",
 			req: UrlShortenRequest{
-				Url:  "aasda",
-				Expr: 1,
+				Url: "aasda",
+				Exp: 1,
 			},
 			setupMock: func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
 				return mockSvc
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedResp: `{"error": "invalid request"}`,
+			expectedResp: `{"message": "Invalid request", "detail": "Url is invalid (url)"}`,
 		},
 		{
 			name: "invalid expr",
 			req: UrlShortenRequest{
-				Url:  "http://test.com",
-				Expr: -1,
+				Url: "http://test.com",
+				Exp: -1,
 			},
 			setupMock: func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
 				return mockSvc
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedResp: `{"error": "invalid request"}`,
+			expectedResp: `{"message": "Invalid request", "detail": "Exp is invalid (gte)"}`,
 		},
 		{
 			name: "svc error",
 			req: UrlShortenRequest{
-				Url:  "http://test.com",
-				Expr: 1,
+				Url: "http://test.com",
+				Exp: 1,
 			},
 			setupMock: func(t *testing.T, ctx *gin.Context) *svc_mocks.UrlShortenService {
 				mockSvc := svc_mocks.NewUrlShortenService(t)
@@ -126,7 +126,7 @@ func TestUrlShortenHandler_RedirectUrl(t *testing.T) {
 				return svc_mocks.NewUrlShortenService(t)
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedResp: `{"error": "invalid query"}`,
+			expectedResp: `{"message": "Invalid request", "detail": "Code is invalid (required)"}`,
 		},
 		{
 			name: "code not found",
