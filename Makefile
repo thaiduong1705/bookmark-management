@@ -8,7 +8,7 @@ swagger:
 	swag init -g cmd/api/main.go
 
 COVERAGE_EXCLUDE=mocks|main.go|test|docs|config.go|client.go
-COVERAGE_THRESHOLD=80
+COVERAGE_THRESHOLD=100
 
 test:
 	go test ./... -coverprofile=coverage.tmp -covermode=atomic -coverpkg=./... -p 1
@@ -21,3 +21,19 @@ test:
 	else \
 		echo "Coverage ($$total%) meets threshold ($(COVERAGE_THRESHOLD)%)"; \
 	fi
+
+
+IMAGE = thaiduong1705/bookmark-service
+VERSION ?= latest
+
+docker-test:
+	docker build --target test --no-cache --progress=plain .
+
+docker-build:
+	docker build --target runner -t $(IMAGE):$(VERSION) .
+
+docker-login:
+	echo "$$DOCKER_PASSWORD" | docker login -u "$$DOCKER_USERNAME" --password-stdin
+
+docker-push:
+	docker push $(IMAGE):$(VERSION)

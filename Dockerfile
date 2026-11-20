@@ -1,6 +1,17 @@
-FROM golang:1.27.3-alpine AS builder
+FROM golang:1.27.3-alpine AS test
 
-RUN mkdir -p "/opt/app"
+RUN apk add --no-cache make bc
+
+WORKDIR /opt/app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN make test
+
+FROM golang:1.27.3-alpine AS builder
 
 WORKDIR /opt/app
 
