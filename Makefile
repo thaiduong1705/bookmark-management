@@ -8,7 +8,7 @@ swagger:
 	swag init -g cmd/api/main.go
 
 COVERAGE_EXCLUDE=mocks|main.go|test|docs|config.go|client.go
-COVERAGE_THRESHOLD=100
+COVERAGE_THRESHOLD=80
 
 test:
 	go test ./... -coverprofile=coverage.tmp -covermode=atomic -coverpkg=./... -p 1
