@@ -1,17 +1,29 @@
-FROM golang:1.27.3-alpine AS builder
+FROM golang:1.27.3-alpine AS test
 
-RUN mkdir -p "/opt/app"
+RUN apk add --no-cache make bc
 
 WORKDIR /opt/app
 
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 
-RUN go install github.com/swaggo/swag/cmd/swag@latest
-RUN swag init -g cmd/api/main.go
+RUN make test
+
+FROM golang:1.27.3-alpine AS builder
+
+WORKDIR /opt/app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN go tool swag init -g cmd/api/main.go
 RUN go build -o bookmark_service cmd/api/main.go
 
 FROM alpine:3.20.10 AS runner
-
 WORKDIR /app
 
 COPY --from=builder /opt/app/bookmark_service .
