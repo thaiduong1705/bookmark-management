@@ -11,6 +11,8 @@ on:
 jobs:
   ci-pipeline:
     runs-on: ubuntu-latest
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -26,14 +28,11 @@ jobs:
 
       - name: build image
         run: make docker-build
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
 
       - name: login docker
         if: ${{ github.ref_type == 'tag' }}
         run: make docker-login
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: push image
