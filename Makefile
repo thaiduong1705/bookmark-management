@@ -21,3 +21,18 @@ test:
 	else \
 		echo "Coverage ($$total%) meets threshold ($(COVERAGE_THRESHOLD)%)"; \
 	fi
+
+IMAGE = "$$DOCKER_USERNAME"
+VERSION ?= latest
+
+docker-test:
+	docker build --target test --no-cache --progress=plain .
+
+docker-build:
+	docker build --target runner -t $(IMAGE)/bookmark_service:$(VERSION) .
+
+docker-login:
+	echo "$$DOCKER_PASSWORD" | docker login -u "$$DOCKER_USERNAME" --password-stdin
+
+docker-push:
+	docker push $(IMAGE)/bookmark_service:$(VERSION)
