@@ -2,7 +2,11 @@ package integration_tests
 
 import (
 	"bookmark-management/internal/api"
+	"bookmark-management/internal/handler/healthcheck"
+	"bookmark-management/internal/handler/response"
 	redisPkg "bookmark-management/pkg/redis"
+	"bookmark-management/pkg/sqldb"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,7 +21,7 @@ func TestHealthCheck_Check(t *testing.T) {
 		cfg            api.Config
 		setupRequest   func() (*httptest.ResponseRecorder, *http.Request)
 		expectedStatus int
-		expectedBody   string
+		expectedBody   any
 	}{
 		{
 			name: "OK",
@@ -28,7 +32,11 @@ func TestHealthCheck_Check(t *testing.T) {
 				return rec, req
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `{"message":"ok","service_name":"bookmark_service","instance_id":"instance_1"}`,
+			expectedBody: healthcheck.CheckResponse{
+				Message:     response.NewMessage("ok"),
+				ServiceName: "bookmark_service",
+				InstanceID:  "instance_1",
+			},
 		},
 	}
 
@@ -36,13 +44,14 @@ func TestHealthCheck_Check(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			mockRedis := redisPkg.InitMockRedis(t)
-			defer mockRedis.Close()
-			testApiEngine := api.NewEngine(&tc.cfg, mockRedis)
+			mockDb := sqldb.InitMockDatabase(t)
+			testApiEngine := api.NewEngine(&tc.cfg, mockRedis, mockDb)
 			rec, req := tc.setupRequest()
 			testApiEngine.ServeHTTP(rec, req)
 
 			assert.Equal(t, tc.expectedStatus, rec.Code)
-			assert.JSONEq(t, tc.expectedBody, rec.Body.String())
+			expectedBody, _ := json.Marshal(tc.expectedBody)
+			assert.JSONEq(t, string(expectedBody), rec.Body.String())
 		})
 	}
 }

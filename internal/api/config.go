@@ -12,12 +12,13 @@ type Config struct {
 	ServiceName string `envconfig:"APP_SERVICE_NAME" default:"bookmark_service"`
 	InstanceId  string `envconfig:"APP_INSTANCE_ID"`
 	BasePath    string `envconfig:"APP_BASE_PATH" default:"/"`
+	LogLevel    string `envconfig:"APP_LOG_LEVEL" default:"info"`
 }
 
 // NewConfig loads Config from environment variables.
-func NewConfig() (*Config, error) {
+func NewConfig(envPrefix string) (*Config, error) {
 	cfg := &Config{}
-	if err := envconfig.Process("", cfg); err != nil {
+	if err := envconfig.Process(envPrefix, cfg); err != nil {
 		return nil, err
 	}
 

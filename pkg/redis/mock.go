@@ -9,8 +9,13 @@ import (
 
 // InitMockRedis starts an in-memory miniredis and returns a client connected to it.
 func InitMockRedis(t *testing.T) *redis.Client {
+	t.Helper()
 	mock := miniredis.RunT(t)
-	return redis.NewClient(&redis.Options{
+	client := redis.NewClient(&redis.Options{
 		Addr: mock.Addr(),
 	})
+	t.Cleanup(func() {
+		_ = client.Close()
+	})
+	return client
 }

@@ -1,10 +1,9 @@
-package service
+package healthcheck
 
 import (
+	redisPkg "bookmark-management/pkg/redis"
 	"net/http/httptest"
 	"testing"
-
-	redisPkg "bookmark-management/pkg/redis"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -21,10 +20,9 @@ func TestHealthCheck_Check(t *testing.T) {
 	t.Run("redis up", func(t *testing.T) {
 		t.Parallel()
 		rdb := redisPkg.InitMockRedis(t)
-		defer rdb.Close()
 
 		ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
-		name, id, err := NewHealthCheck(rdb, serviceName, instanceId).Check(ctx)
+		name, id, err := NewService(rdb, serviceName, instanceId).Check(ctx)
 
 		assert.NoError(t, err)
 		assert.Equal(t, serviceName, name)
@@ -37,7 +35,7 @@ func TestHealthCheck_Check(t *testing.T) {
 		rdb.Close()
 
 		ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
-		name, id, err := NewHealthCheck(rdb, serviceName, instanceId).Check(ctx)
+		name, id, err := NewService(rdb, serviceName, instanceId).Check(ctx)
 
 		assert.Error(t, err)
 		assert.Empty(t, name)

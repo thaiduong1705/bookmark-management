@@ -1,0 +1,49 @@
+# Mocks for the internal layers. Shared mocks (pkg/) live in pkg/.mockery.yml.
+# Generate with: make mocks
+template: testify
+packages:
+  bookmark-management/internal/service/user:
+    config:
+      dir: internal/service/mocks
+      pkgname: svc_mocks
+    interfaces:
+      Service:
+        config:
+          structname: UserService
+          filename: user.go
+  bookmark-management/internal/service/url:
+    config:
+      dir: internal/service/mocks
+      pkgname: svc_mocks
+    interfaces:
+      Service:
+        config:
+          structname: UrlShortenService
+          filename: urlshorten.go
+  bookmark-management/internal/service/healthcheck:
+    config:
+      dir: internal/service/mocks
+      pkgname: svc_mocks
+    interfaces:
+      Service:
+        config:
+          structname: HealthCheck
+          filename: healthcheck.go
+  bookmark-management/internal/repository/user:
+    config:
+      dir: internal/repository/mocks
+      pkgname: repo_mocks
+    interfaces:
+      Repository:
+        config:
+          structname: UserRepository
+          filename: user.go
+  bookmark-management/internal/repository/url:
+    config:
+      dir: internal/repository/mocks
+      pkgname: repo_mocks
+    interfaces:
+      Repository:
+        config:
+          structname: UrlShortenRepository
+          filename: urlshorten.go
