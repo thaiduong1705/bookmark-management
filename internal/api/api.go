@@ -5,6 +5,7 @@ import (
 	healthcheckhandler "bookmark-management/internal/handler/healthcheck"
 	urlshortenhandler "bookmark-management/internal/handler/url"
 	userhandler "bookmark-management/internal/handler/user"
+	healthcheckrepo "bookmark-management/internal/repository/healthcheck"
 	urlshortenrepo "bookmark-management/internal/repository/url"
 	userrepo "bookmark-management/internal/repository/user"
 	healthcheckservice "bookmark-management/internal/service/healthcheck"
@@ -66,7 +67,8 @@ func (e *engine) initRoutes() {
 	strGenUtil := utils.NewStringGenerator()
 	passwordUtil := utils.NewPasswordUtil()
 
-	healthService := healthcheckservice.NewService(e.rdb, e.cfg.ServiceName, e.cfg.InstanceId)
+	healthRepo := healthcheckrepo.NewRepository(e.rdb, e.db)
+	healthService := healthcheckservice.NewService(e.cfg.ServiceName, e.cfg.InstanceId, healthRepo)
 	healthHandler := healthcheckhandler.NewHandler(healthService)
 
 	urlShortenRepo := urlshortenrepo.NewRepository(e.rdb)

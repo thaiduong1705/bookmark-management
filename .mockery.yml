@@ -47,3 +47,12 @@ packages:
         config:
           structname: UrlShortenRepository
           filename: urlshorten.go
+  bookmark-management/internal/repository/healthcheck:
+    config:
+      dir: internal/repository/mocks
+      pkgname: repo_mocks
+    interfaces:
+      Repository:
+        config:
+          structname: HealthcheckRepository
+          filename: healthcheck.go

@@ -5,10 +5,11 @@ import (
 	"fmt"
 )
 
-// Check pings Redis and returns an error if it is unreachable.
+// Check returns the service name and instance id, or an error if a dependency is unreachable.
 func (h *service) Check(ctx context.Context) (string, string, error) {
-	if err := h.rdb.Ping(ctx).Err(); err != nil {
-		return "", "", fmt.Errorf("redis ping: %w", err)
+	if err := h.repo.Check(ctx); err != nil {
+		return "", "", fmt.Errorf("healthcheck: %w", err)
 	}
+
 	return h.serviceName, h.instanceId, nil
 }

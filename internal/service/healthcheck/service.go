@@ -1,9 +1,8 @@
 package healthcheck
 
 import (
+	"bookmark-management/internal/repository/healthcheck"
 	"context"
-
-	"github.com/redis/go-redis/v9"
 )
 
 // Service checks the health of the service dependencies.
@@ -12,16 +11,16 @@ type Service interface {
 }
 
 type service struct {
-	rdb         *redis.Client
+	repo        healthcheck.Repository
 	serviceName string
 	instanceId  string
 }
 
-// NewService creates a HealthCheck backed by the given Redis client.
-func NewService(rdb *redis.Client, sName string, insId string) Service {
+// NewService creates a healthcheck Service that reports sName and insId when repo is healthy.
+func NewService(sName string, insId string, repo healthcheck.Repository) Service {
 	return &service{
-		rdb:         rdb,
 		serviceName: sName,
 		instanceId:  insId,
+		repo:        repo,
 	}
 }
