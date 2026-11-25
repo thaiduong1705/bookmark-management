@@ -7,6 +7,13 @@ build:
 swagger:
 	swag init -g cmd/api/main.go
 
+# Mocks use mockery v3: go install github.com/vektra/mockery/v3@latest
+mocks:
+	mockery --config .mockery.yml
+
+mocks-pkg:
+	mockery --config pkg/.mockery.yml
+
 COVERAGE_EXCLUDE=mocks|main.go|test|docs|config.go|client.go
 COVERAGE_THRESHOLD=80
 

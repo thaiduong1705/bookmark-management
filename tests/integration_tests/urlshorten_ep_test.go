@@ -3,8 +3,10 @@ package integration_tests
 import (
 	"bookmark-management/internal/api"
 	"bookmark-management/internal/domain"
-	"bookmark-management/internal/handler"
+	"bookmark-management/internal/handler/response"
+	urlshortenhandler "bookmark-management/internal/handler/url"
 	redisPkg "bookmark-management/pkg/redis"
+	"bookmark-management/pkg/sqldb"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -21,12 +23,12 @@ func TestUrlShorten_CreateUrl(t *testing.T) {
 		name         string
 		setupRequest func() (*httptest.ResponseRecorder, *http.Request)
 		expectedCode int
-		expectedResp string
+		expectedResp any
 	}{
 		{
 			name: "success",
 			setupRequest: func() (*httptest.ResponseRecorder, *http.Request) {
-				body, _ := json.Marshal(handler.UrlShortenRequest{
+				body, _ := json.Marshal(urlshortenhandler.CreateRequest{
 					Url: "http://test.com",
 					Exp: 1,
 				})
@@ -42,18 +44,17 @@ func TestUrlShorten_CreateUrl(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			mockRedis := redisPkg.InitMockRedis(t)
-			defer mockRedis.Close()
-			testApiEngine := api.NewEngine(&api.Config{}, mockRedis)
+			mockDb := sqldb.InitMockDatabase(t)
+			testApiEngine := api.NewEngine(&api.Config{}, mockRedis, mockDb)
 			rec, req := tc.setupRequest()
 			testApiEngine.ServeHTTP(rec, req)
 			assert.Equal(t, tc.expectedCode, rec.Code)
-			if tc.expectedResp != "" {
-				assert.JSONEq(t, tc.expectedResp, rec.Body.String())
+			if tc.expectedResp != nil {
+				expectedResp, _ := json.Marshal(tc.expectedResp)
+				assert.JSONEq(t, string(expectedResp), rec.Body.String())
 				return
 			}
-			var resp struct {
-				Code string `json:"code"`
-			}
+			var resp urlshortenhandler.CreateResponse
 			assert.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
 			assert.Len(t, resp.Code, domain.RandomLength)
 		})
@@ -69,7 +70,7 @@ func TestUrlShorten_RedirectUrl(t *testing.T) {
 		setupRequest func() (*httptest.ResponseRecorder, *http.Request)
 		expectedCode int
 		expectedLoc  string
-		expectedResp string
+		expectedResp any
 	}{
 		{
 			name: "success",
@@ -95,7 +96,7 @@ func TestUrlShorten_RedirectUrl(t *testing.T) {
 				return rec, req
 			},
 			expectedCode: http.StatusNotFound,
-			expectedResp: `{"error": "url not found"}`,
+			expectedResp: response.NewErrorResponse("URL not found", ""),
 		},
 	}
 
@@ -104,14 +105,15 @@ func TestUrlShorten_RedirectUrl(t *testing.T) {
 			t.Parallel()
 			mockRedis := redisPkg.InitMockRedis(t)
 			mockRedis.Set(t.Context(), tc.code, tc.url, 0)
-			defer mockRedis.Close()
-			testApiEngine := api.NewEngine(&api.Config{}, mockRedis)
+			mockDb := sqldb.InitMockDatabase(t)
+			testApiEngine := api.NewEngine(&api.Config{}, mockRedis, mockDb)
 			rec, req := tc.setupRequest()
 			testApiEngine.ServeHTTP(rec, req)
 			assert.Equal(t, tc.expectedCode, rec.Code)
 			assert.Equal(t, tc.expectedLoc, rec.Header().Get("Location"))
-			if tc.expectedResp != "" {
-				assert.JSONEq(t, tc.expectedResp, rec.Body.String())
+			if tc.expectedResp != nil {
+				expectedResp, _ := json.Marshal(tc.expectedResp)
+				assert.JSONEq(t, string(expectedResp), rec.Body.String())
 			}
 		})
 	}

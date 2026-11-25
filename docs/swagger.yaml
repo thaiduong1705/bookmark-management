@@ -1,18 +1,27 @@
 basePath: /
 definitions:
-  handler.FieldErrorResponse:
+  healthcheck.CheckResponse:
     properties:
-      detail:
-        description: Detail lists the invalid fields and the validation rule each
-          one broke; omitted when unknown.
-        example: Url is invalid (url)
+      instance_id:
         type: string
       message:
-        description: Message is a short, general description of the failure.
-        example: Invalid request
+        type: string
+      service_name:
         type: string
     type: object
-  handler.UrlShortenRequest:
+  response.ErrorResponse:
+    properties:
+      detail:
+        type: string
+      message:
+        type: string
+    type: object
+  response.Message:
+    properties:
+      message:
+        type: string
+    type: object
+  url.CreateRequest:
     properties:
       exp:
         maximum: 84600
@@ -22,6 +31,46 @@ definitions:
         type: string
     required:
     - url
+    type: object
+  url.CreateResponse:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  user.RegisterRequest:
+    properties:
+      display_name:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - display_name
+    - email
+    - password
+    - username
+    type: object
+  user.RegisterResponse:
+    properties:
+      created_at:
+        type: string
+      display_name:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
     type: object
 info:
   contact: {}
@@ -38,15 +87,11 @@ paths:
         "200":
           description: Service is healthy
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/healthcheck.CheckResponse'
         "500":
           description: Service is unhealthy
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/response.Message'
       summary: Health check
       tags:
       - health
@@ -60,26 +105,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.UrlShortenRequest'
+          $ref: '#/definitions/url.CreateRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Generated short code
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/url.CreateResponse'
         "400":
           description: Invalid request
           schema:
-            $ref: '#/definitions/handler.FieldErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/response.ErrorResponse'
       summary: Create short URL
       tags:
       - links
@@ -107,20 +148,48 @@ paths:
         "400":
           description: Invalid query
           schema:
-            $ref: '#/definitions/handler.FieldErrorResponse'
+            $ref: '#/definitions/response.ErrorResponse'
         "404":
           description: URL not found
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/response.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/response.ErrorResponse'
       summary: Redirect to original URL
       tags:
       - links
+  /v1/users/register:
+    post:
+      description: User registers.
+      parameters:
+      - description: Register payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Generated user
+          schema:
+            $ref: '#/definitions/user.RegisterResponse'
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: User already exists
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Register account
+      tags:
+      - users
 swagger: "2.0"

@@ -1,6 +1,7 @@
 FROM golang:1.27.3-alpine AS test
 
-RUN apk add --no-cache make bc
+RUN apk add --no-cache make bc gcc musl-dev
+ENV CGO_ENABLED=1
 
 WORKDIR /opt/app
 

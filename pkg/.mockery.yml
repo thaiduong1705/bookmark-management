@@ -1,0 +1,16 @@
+# Mocks for shared packages under pkg/. Generate with: make mocks-pkg
+template: testify
+packages:
+  bookmark-management/pkg/utils:
+    config:
+      dir: pkg/utils/mocks
+      pkgname: utils_mocks
+    interfaces:
+      PasswordUtil:
+        config:
+          structname: PasswordUtil
+          filename: password.go
+      StringGenerator:
+        config:
+          structname: StringGenerator
+          filename: string_generator.go

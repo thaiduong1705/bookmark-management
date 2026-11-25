@@ -2,5 +2,12 @@ package domain
 
 import "errors"
 
-// ErrNotFound is returned when a short code has no stored URL.
-var ErrNotFound = errors.New("url not found")
+var (
+	// ErrNotFound is returned when not found.
+	ErrNotFound = errors.New("not found")
+	// ErrAlreadyExists is returned when a unique constraint rejects a record.
+	ErrAlreadyExists = errors.New("already exists")
+	// ErrInvalidInput is returned when the database rejects the data as invalid
+	// (not null, check constraint, value too long...).
+	ErrInvalidInput = errors.New("invalid input")
+)

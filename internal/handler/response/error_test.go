@@ -1,4 +1,4 @@
-package handler
+package response
 
 import (
 	"encoding/json"
@@ -10,42 +10,48 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// testInput mirrors a real request DTO: exported fields with binding tags.
+type testInput struct {
+	Url string `binding:"required,url"`
+	Exp int    `binding:"gte=0"`
+}
+
 func TestParseBindingError(t *testing.T) {
 	t.Parallel()
 	testcases := []struct {
 		name     string
 		makeErr  func(t *testing.T) error
-		expected FieldErrorResponse
+		expected ErrorResponse
 	}{
 		{
 			name: "non-validator error only returns message",
 			makeErr: func(t *testing.T) error {
-				err := json.Unmarshal([]byte(`{"url":`), &UrlShortenRequest{})
+				err := json.Unmarshal([]byte(`{"url":`), &struct{}{})
 				require.Error(t, err)
 				return err
 			},
-			expected: FieldErrorResponse{Message: "Invalid request"},
+			expected: NewErrorResponse("Invalid request", ""),
 		},
 		{
 			name: "multiple invalid fields are aggregated",
 			makeErr: func(t *testing.T) error {
-				return validationErr(t, &UrlShortenRequest{Url: "aasda", Exp: -1})
+				return validationErr(t, &testInput{Url: "aasda", Exp: -1})
 			},
-			expected: FieldErrorResponse{Message: "Invalid request", Detail: "Url is invalid (url) Exp is invalid (gte)"},
+			expected: NewErrorResponse("Invalid request", "Url is invalid (url) Exp is invalid (gte)"),
 		},
 		{
 			name: "wrapped validation error is still detected",
 			makeErr: func(t *testing.T) error {
-				return fmt.Errorf("bind failed: %w", validationErr(t, &UrlShortenRequest{Url: "aasda", Exp: 1}))
+				return fmt.Errorf("bind failed: %w", validationErr(t, &testInput{Url: "aasda", Exp: 1}))
 			},
-			expected: FieldErrorResponse{Message: "Invalid request", Detail: "Url is invalid (url)"},
+			expected: NewErrorResponse("Invalid request", "Url is invalid (url)"),
 		},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			actual := parseBindingError(tc.makeErr(t))
+			actual := ParseBindingError(tc.makeErr(t))
 			assert.Equal(t, tc.expected, actual)
 		})
 	}

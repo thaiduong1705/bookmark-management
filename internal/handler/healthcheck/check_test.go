@@ -1,7 +1,9 @@
-package handler
+package healthcheck
 
 import (
+	"bookmark-management/internal/handler/response"
 	healthcheck_svc_mocks "bookmark-management/internal/service/mocks"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -19,20 +21,24 @@ func TestHealthCheck_Check(t *testing.T) {
 		svcInstanceId  string
 		svcErr         error
 		expectedStatus int
-		expectedBody   string
+		expectedBody   any
 	}{
 		{
 			name:           "OK",
 			svcName:        "bookmark_service",
 			svcInstanceId:  "instance_1",
 			expectedStatus: http.StatusOK,
-			expectedBody:   `{"message":"ok","service_name":"bookmark_service","instance_id":"instance_1"}`,
+			expectedBody: CheckResponse{
+				Message:     response.NewMessage("ok"),
+				ServiceName: "bookmark_service",
+				InstanceID:  "instance_1",
+			},
 		},
 		{
 			name:           "redis down",
 			svcErr:         errors.New("redis down"),
 			expectedStatus: http.StatusInternalServerError,
-			expectedBody:   `{"message":"unhealthy"}`,
+			expectedBody:   response.NewMessage("unhealthy"),
 		},
 	}
 
@@ -45,10 +51,11 @@ func TestHealthCheck_Check(t *testing.T) {
 
 			mockSvc := healthcheck_svc_mocks.NewHealthCheck(t)
 			mockSvc.On("Check", ginCtx).Return(tc.svcName, tc.svcInstanceId, tc.svcErr)
-			NewHealthCheck(mockSvc).Check(ginCtx)
+			NewHandler(mockSvc).Check(ginCtx)
 
 			assert.Equal(t, tc.expectedStatus, rec.Code)
-			assert.JSONEq(t, tc.expectedBody, rec.Body.String())
+			expectedBody, _ := json.Marshal(tc.expectedBody)
+			assert.JSONEq(t, string(expectedBody), rec.Body.String())
 		})
 	}
 }

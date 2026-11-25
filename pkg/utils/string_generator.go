@@ -5,8 +5,6 @@ import (
 	"math/big"
 )
 
-//go:generate mockery --name=StringGenerator --filename string_generator.go --outpkg utils_mocks
-
 // StringGenerator generates random strings.
 type StringGenerator interface {
 	// Generate returns a random alphanumeric string of the given length.
