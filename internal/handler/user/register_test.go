@@ -179,7 +179,7 @@ func TestUserHandler_Register(t *testing.T) {
 			req: RegisterRequest{
 				DisplayName: "test display name",
 				Email:       "test",
-				Password:    "test_password123",
+				Password:    "test#@!abcxz#3293",
 				Username:    "test_username",
 			},
 			setupMockSvc: func(t *testing.T, ctx context.Context) *svc_mocks.UserService {

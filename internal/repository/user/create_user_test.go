@@ -95,7 +95,7 @@ func TestUserRepository_CreateUser(t *testing.T) {
 			},
 			inputModel: &domain.User{
 				ID:       "684f979e-672c-4f7a-8199-4274c0f8d83a",
-				Username: "a1",
+				Username: "a1-32",
 				Password: "testpassword",
 				Email:    "test@gmail.com",
 			},
