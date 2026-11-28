@@ -20,3 +20,6 @@ type RegisterResponse struct {
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
 }
+
+type LoginRequest struct {
+}
